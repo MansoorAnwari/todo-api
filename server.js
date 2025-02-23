@@ -35,15 +35,22 @@ app.get("/api/todos", async (req, res) => {
 // ساخت تسک جدید
 app.post("/api/todos", async (req, res) => {
     try {
-        const { title } = req.body;
-        if (!title) return res.status(400).json({ error: "Title required" });
+        const { title, description, status } = req.body;
 
-        const newTodo = new Todo({ title });
+        if (!title) {
+            return res.status(400).json({ error: "عنوان الزامی است" });
+        }
+
+        const newTodo = new Todo({
+            title,
+            description: description || "",
+            status: status || "To Do"
+        });
+
         await newTodo.save();
-
         res.status(201).json(newTodo);
     } catch (error) {
-        res.status(500).json({ error: "Error creating todo" });
+        res.status(500).json({ error: "خطا در ایجاد تسک" });
     }
 });
 
@@ -64,20 +71,27 @@ app.get("/api/todos/:id", async (req, res) => {
 // ویرایش تسک با ID
 app.put("/api/todos/:id", async (req, res) => {
     try {
-        const { title } = req.body;
-        if (!title) return res.status(400).json({ error: "Title required" });
+        const { title, description, status } = req.body;
+
+        const updateData = {
+            title,
+            description,
+            status
+        };
 
         const updatedTodo = await Todo.findByIdAndUpdate(
             req.params.id,
-            { title },
-            { new: true }
+            updateData,
+            { new: true, runValidators: true }
         );
 
-        if (!updatedTodo) return res.status(404).json({ error: "Todo not found" });
+        if (!updatedTodo) {
+            return res.status(404).json({ error: "تسک پیدا نشد" });
+        }
 
         res.json(updatedTodo);
     } catch (error) {
-        res.status(500).json({ error: "Error updating todo" });
+        res.status(500).json({ error: "خطا در آپدیت تسک" });
     }
 });
 
